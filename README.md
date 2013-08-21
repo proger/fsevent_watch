@@ -1,7 +1,9 @@
 # fsevent_watch
 
 The tool allows you to watch filesystem events on a Mac.
-This is a standalone fork the C tool inside https://github.com/thibaudgg/rb-fsevent focused on usability.
+
+This is a standalone fork the C tool inside https://github.com/thibaudgg/rb-fsevent
+focused on usability and *composability* with other tools.
 
 ## Awesomeness
 
