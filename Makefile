@@ -4,6 +4,7 @@ OBJ= $(SRC:.c=.o)
 
 CC= clang
 CFLAGS= -DCLI_VERSION="\"$(shell git describe --always)\""
+CFLAGS+= -Wno-deprecated-declarations
 #CFLAGS+= -DDEBUG
 LDFLAGS= -framework CoreFoundation -framework CoreServices
 
@@ -20,3 +21,6 @@ install: $(PROG)
 
 clean:
 	rm -f *.o $(PROG)
+
+printflags:
+	perl -lane 'printf "\\%o%s", $$., $$F[0]' < flags | pbcopy

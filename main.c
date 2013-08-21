@@ -294,67 +294,13 @@ static void callback(__attribute__((unused)) FSEventStreamRef streamRef,
                      const FSEventStreamEventId eventIds[])
 {
   char** paths = eventPaths;
-
-
-#ifdef DEBUG
-  fprintf(stderr, "\n");
-  fprintf(stderr, "FSEventStreamCallback fired!\n");
-  fprintf(stderr, "  numEvents: %lu\n", numEvents);
+  char *buf = calloc(sizeof(FSEVENTSBITS), sizeof(char));
 
   for (size_t i = 0; i < numEvents; i++) {
-    fprintf(stderr, "\n");
-    fprintf(stderr, "  event ID: %llu\n", eventIds[i]);
-    fprintf(stderr, "  event flags: %#.8x\n", eventFlags[i]);
-
-    FLAG_CHECK_STDERR(eventFlags[i], kFSEventStreamEventFlagMustScanSubDirs,
-                      "    Recursive scanning of directory required");
-    FLAG_CHECK_STDERR(eventFlags[i], kFSEventStreamEventFlagUserDropped,
-                      "    Buffering problem: events dropped user-side");
-    FLAG_CHECK_STDERR(eventFlags[i], kFSEventStreamEventFlagKernelDropped,
-                      "    Buffering problem: events dropped kernel-side");
-    FLAG_CHECK_STDERR(eventFlags[i], kFSEventStreamEventFlagEventIdsWrapped,
-                      "    Event IDs have wrapped");
-    FLAG_CHECK_STDERR(eventFlags[i], kFSEventStreamEventFlagHistoryDone,
-                      "    All historical events have been processed");
-    FLAG_CHECK_STDERR(eventFlags[i], kFSEventStreamEventFlagRootChanged,
-                      "    Root path has changed");
-    FLAG_CHECK_STDERR(eventFlags[i], kFSEventStreamEventFlagMount,
-                      "    A new volume was mounted at this path");
-    FLAG_CHECK_STDERR(eventFlags[i], kFSEventStreamEventFlagUnmount,
-                      "    A volume was unmounted from this path");
-    FLAG_CHECK_STDERR(eventFlags[i], kFSEventStreamEventFlagItemCreated,
-                      "    Item created");
-    FLAG_CHECK_STDERR(eventFlags[i], kFSEventStreamEventFlagItemRemoved,
-                      "    Item removed");
-    FLAG_CHECK_STDERR(eventFlags[i], kFSEventStreamEventFlagItemInodeMetaMod,
-                      "    Item metadata modified");
-    FLAG_CHECK_STDERR(eventFlags[i], kFSEventStreamEventFlagItemRenamed,
-                      "    Item renamed");
-    FLAG_CHECK_STDERR(eventFlags[i], kFSEventStreamEventFlagItemModified,
-                      "    Item modified");
-    FLAG_CHECK_STDERR(eventFlags[i], kFSEventStreamEventFlagItemFinderInfoMod,
-                      "    Item Finder Info modified");
-    FLAG_CHECK_STDERR(eventFlags[i], kFSEventStreamEventFlagItemChangeOwner,
-                      "    Item changed ownership");
-    FLAG_CHECK_STDERR(eventFlags[i], kFSEventStreamEventFlagItemXattrMod,
-                      "    Item extended attributes modified");
-    FLAG_CHECK_STDERR(eventFlags[i], kFSEventStreamEventFlagItemIsFile,
-                      "    Item is a file");
-    FLAG_CHECK_STDERR(eventFlags[i], kFSEventStreamEventFlagItemIsDir,
-                      "    Item is a directory");
-    FLAG_CHECK_STDERR(eventFlags[i], kFSEventStreamEventFlagItemIsSymlink,
-                      "    Item is a symbolic link");
-
-    fprintf(stderr, "  event path: %s\n", paths[i]);
-    fprintf(stderr, "\n");
+    sprintb(buf, eventFlags[i], FSEVENTSBITS);
+    printf("%llu\t%#.8x=[%s]\t%s\n", eventIds[i], eventFlags[i], buf, paths[i]);
   }
-
-  fprintf(stderr, "\n");
-#endif
-
-  for (size_t i = 0; i < numEvents; i++) {
-    printf("%llu\t%#.8x\t%s\n", eventIds[i], eventFlags[i], paths[i]);
-  }
+  free(buf);
 }
 
 int main(int argc, const char* argv[])
