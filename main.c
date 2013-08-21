@@ -12,17 +12,17 @@
 //
 // Structure for storing metadata parsed from the commandline
 static struct {
-  FSEventStreamEventId            sinceWhen;
-  CFTimeInterval                  latency;
-  FSEventStreamCreateFlags        flags;
-  CFMutableArrayRef               paths;
-  enum FSEventWatchOutputFormat   format;
+  FSEventStreamEventId     sinceWhen;
+  CFTimeInterval           latency;
+  FSEventStreamCreateFlags flags;
+  CFMutableArrayRef        paths;
+  int                      format;
 } config = {
   (UInt64) kFSEventStreamEventIdSinceNow,
   (double) 0.3,
   (CFOptionFlags) kFSEventStreamCreateFlagNone,
   NULL,
-  kFSEventWatchOutputFormatClassic
+  0
 };
 
 // Prototypes
@@ -256,13 +256,7 @@ static inline void parse_cli_settings(int argc, const char* argv[])
 #ifdef DEBUG
   fprintf(stderr, "config.sinceWhen    %llu\n", config.sinceWhen);
   fprintf(stderr, "config.latency      %f\n", config.latency);
-
-// STFU clang
-#if defined(__LP64__)
   fprintf(stderr, "config.flags        %#.8x\n", config.flags);
-#else
-  fprintf(stderr, "config.flags        %#.8lx\n", config.flags);
-#endif
 
   FLAG_CHECK_STDERR(config.flags, kFSEventStreamCreateFlagUseCFTypes,
                     "  Using CF instead of C types");
@@ -292,85 +286,6 @@ static inline void parse_cli_settings(int argc, const char* argv[])
 #endif
 }
 
-// original output format for rb-fsevent
-static void classic_output_format(size_t numEvents,
-                                  char** paths)
-{
-  for (size_t i = 0; i < numEvents; i++) {
-    fprintf(stdout, "%s:", paths[i]);
-  }
-  fprintf(stdout, "\n");
-}
-
-// output format used in the Yoshimasa Niwa branch of rb-fsevent
-static void niw_output_format(size_t numEvents,
-                              char** paths,
-                              const FSEventStreamEventFlags eventFlags[],
-                              const FSEventStreamEventId eventIds[])
-{
-  for (size_t i = 0; i < numEvents; i++) {
-    fprintf(stdout, "%lu:%llu:%s\n",
-            (unsigned long)eventFlags[i],
-            (unsigned long long)eventIds[i],
-            paths[i]);
-  }
-  fprintf(stdout, "\n");
-}
-
-static void tstring_output_format(size_t numEvents,
-                                  char** paths,
-                                  const FSEventStreamEventFlags eventFlags[],
-                                  const FSEventStreamEventId eventIds[],
-                                  TSITStringFormat format)
-{
-  CFMutableArrayRef events = CFArrayCreateMutable(kCFAllocatorDefault,
-                             0, &kCFTypeArrayCallBacks);
-
-  for (size_t i = 0; i < numEvents; i++) {
-    CFMutableDictionaryRef event = CFDictionaryCreateMutable(kCFAllocatorDefault,
-                                   0,
-                                   &kCFTypeDictionaryKeyCallBacks,
-                                   &kCFTypeDictionaryValueCallBacks);
-
-    CFStringRef path = CFStringCreateWithBytes(kCFAllocatorDefault,
-                       (const UInt8*)paths[i],
-                       (CFIndex)strlen(paths[i]),
-                       kCFStringEncodingUTF8,
-                       false);
-    CFDictionarySetValue(event, CFSTR("path"), path);
-
-    CFNumberRef flags = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &eventFlags[i]);
-    CFDictionarySetValue(event, CFSTR("flags"), flags);
-
-    CFNumberRef ident = CFNumberCreate(kCFAllocatorDefault, kCFNumberLongLongType, &eventIds[i]);
-    CFDictionarySetValue(event, CFSTR("id"), ident);
-
-    CFArrayAppendValue(events, event);
-
-    CFRelease(event);
-    CFRelease(path);
-    CFRelease(flags);
-    CFRelease(ident);
-  }
-
-  CFMutableDictionaryRef meta = CFDictionaryCreateMutable(kCFAllocatorDefault,
-                                0,
-                                &kCFTypeDictionaryKeyCallBacks,
-                                &kCFTypeDictionaryValueCallBacks);
-  CFDictionarySetValue(meta, CFSTR("events"), events);
-
-  CFNumberRef num = CFNumberCreate(kCFAllocatorDefault, kCFNumberCFIndexType, &numEvents);
-  CFDictionarySetValue(meta, CFSTR("numEvents"), num);
-
-  CFDataRef data = TSICTStringCreateRenderedDataFromObjectWithFormat(meta, format);
-  fprintf(stdout, "%s", CFDataGetBytePtr(data));
-
-  CFRelease(events);
-  CFRelease(num);
-  CFRelease(meta);
-  CFRelease(data);
-}
-
 static void callback(__attribute__((unused)) FSEventStreamRef streamRef,
                      __attribute__((unused)) void* clientCallBackInfo,
                      size_t numEvents,
@@ -389,13 +304,7 @@ static void callback(__attribute__((unused)) FSEventStreamRef streamRef,
   for (size_t i = 0; i < numEvents; i++) {
     fprintf(stderr, "\n");
     fprintf(stderr, "  event ID: %llu\n", eventIds[i]);
-
-// STFU clang
-#if defined(__LP64__)
     fprintf(stderr, "  event flags: %#.8x\n", eventFlags[i]);
-#else
-    fprintf(stderr, "  event flags: %#.8lx\n", eventFlags[i]);
-#endif
 
     FLAG_CHECK_STDERR(eventFlags[i], kFSEventStreamEventFlagMustScanSubDirs,
                       "    Recursive scanning of directory required");
@@ -443,19 +352,9 @@ static void callback(__attribute__((unused)) FSEventStreamRef streamRef,
   fprintf(stderr, "\n");
 #endif
 
-  if (config.format == kFSEventWatchOutputFormatClassic) {
-    classic_output_format(numEvents, paths);
-  } else if (config.format == kFSEventWatchOutputFormatNIW) {
-    niw_output_format(numEvents, paths, eventFlags, eventIds);
-  } else if (config.format == kFSEventWatchOutputFormatTNetstring) {
-    tstring_output_format(numEvents, paths, eventFlags, eventIds,
-                          kTSITStringFormatTNetstring);
-  } else if (config.format == kFSEventWatchOutputFormatOTNetstring) {
-    tstring_output_format(numEvents, paths, eventFlags, eventIds,
-                          kTSITStringFormatOTNetstring);
+  for (size_t i = 0; i < numEvents; i++) {
+    printf("%llu\t%#.8x\t%s\n", eventIds[i], eventFlags[i], paths[i]);
   }
-
-  fflush(stdout);
 }
 
 int main(int argc, const char* argv[])
@@ -487,3 +386,5 @@ int main(int argc, const char* argv[])
 
   return 0;
 }
+
+// vim: ts=2 sts=2 et sw=2

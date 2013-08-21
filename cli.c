@@ -13,8 +13,7 @@ const char* cli_info_help[] = {
   "  -r, --watch-root          watch for when the root path has changed",
   // "  -i, --ignore-self         ignore current process",
   "  -F, --file-events         provide file level event data",
-  "  -f, --format=name         output format (classic, niw, \n"
-  "                                           tnetstring, otnetstring)",
+  "  -f, --format=name         output format (ignored)",
   0
 };
 
@@ -27,7 +26,7 @@ static void default_args (struct cli_info* args_info)
   args_info->ignore_self_flag   = false;
   args_info->file_events_flag   = false;
   args_info->mark_self_flag     = false;
-  args_info->format_arg         = kFSEventWatchOutputFormatClassic;
+  args_info->format_arg         = 0;
 }
 
 static void cli_parser_release (struct cli_info* args_info)
@@ -88,16 +87,6 @@ void cli_show_plist (void)
 void cli_print_version (void)
 {
   printf("%s %s\n\n", CLI_NAME, CLI_VERSION);
-#ifdef COMPILED_AT
-  printf("Compiled at:    %s\n", COMPILED_AT);
-#endif
-#ifdef COMPILER
-  printf("Compiled with:  %s\n", COMPILER);
-#endif
-#ifdef TARGET_CPU
-  printf("Compiled for:   %s\n", TARGET_CPU);
-#endif
-  printf("\n");
 }
 
 void cli_print_help (void)
@@ -159,18 +148,7 @@ int cli_parser (int argc, const char** argv, struct cli_info* args_info)
       args_info->mark_self_flag = true;
       break;
     case 'f': // format
-      if (strcmp(optarg, "classic") == 0) {
-        args_info->format_arg = kFSEventWatchOutputFormatClassic;
-      } else if (strcmp(optarg, "niw") == 0) {
-        args_info->format_arg = kFSEventWatchOutputFormatNIW;
-      } else if (strcmp(optarg, "tnetstring") == 0) {
-        args_info->format_arg = kFSEventWatchOutputFormatTNetstring;
-      } else if (strcmp(optarg, "otnetstring") == 0) {
-        args_info->format_arg = kFSEventWatchOutputFormatOTNetstring;
-      } else {
-        fprintf(stderr, "Unknown output format: %s\n", optarg);
-        exit(EXIT_FAILURE);
-      }
+      // XXX: ignored
       break;
     case 'V': // version
       cli_print_version();

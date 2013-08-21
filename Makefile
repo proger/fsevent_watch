@@ -1,13 +1,22 @@
-
+PROG= fsevent_watch
 SRC= $(wildcard *.c)
 OBJ= $(SRC:.c=.o)
 
 CC= clang
-CFLAGS= -DPROJECT_VERSION="0.1"
+CFLAGS= -DCLI_VERSION="\"$(shell git describe --always)\""
+#CFLAGS+= -DDEBUG
 LDFLAGS= -framework CoreFoundation -framework CoreServices
 
-fsevent_watch: $(OBJ)
+PREFIX ?= /usr/local
+
+$(PROG): $(OBJ)
 	$(CC) $(LDFLAGS) $(OBJ) -o $@
 
 %.o: %.c
 	$(CC) -c $(CFLAGS) $< -o $@
+
+install: $(PROG)
+	install -m 755 $< $(PREFIX)/bin
+
+clean:
+	rm -f *.o $(PROG)

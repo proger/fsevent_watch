@@ -7,15 +7,6 @@
 #define CLI_NAME "fsevent_watch"
 #endif /* CLI_NAME */
 
-#ifndef PROJECT_VERSION
-#error "PROJECT_VERSION not set"
-#endif /* PROJECT_VERSION */
-
-#ifndef CLI_VERSION
-#define CLI_VERSION _xstr(PROJECT_VERSION)
-#endif /* CLI_VERSION */
-
-
 struct cli_info {
   UInt64 since_when_arg;
   double latency_arg;
@@ -24,7 +15,7 @@ struct cli_info {
   bool ignore_self_flag;
   bool file_events_flag;
   bool mark_self_flag;
-  enum FSEventWatchOutputFormat format_arg;
+  int format_arg;
 
   char** inputs;
   unsigned inputs_num;
