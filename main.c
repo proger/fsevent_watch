@@ -300,6 +300,7 @@ static void callback(__attribute__((unused)) FSEventStreamRef streamRef,
     sprintb(buf, eventFlags[i], FSEVENTSBITS);
     printf("%llu\t%#.8x=[%s]\t%s\n", eventIds[i], eventFlags[i], buf, paths[i]);
   }
+  fflush(stdout);
   free(buf);
 }
 
