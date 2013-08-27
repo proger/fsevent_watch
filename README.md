@@ -38,6 +38,12 @@ make: `fsevent_watch' is up to date.
 ^C
 ```
 
+* or, for example, authoring a Markdown file with vim and redcarpet
+
+```
+% fsevent_watch -F | grep --line-buffered README.md'$' | xargs -I% -n1 sh -c 'redcarpet --parse-fenced-code-blocks --parse-autolink --render-prettify README.md > README.html'
+```
+
 ## Building
 
 * just run `make install` (and make sure you have a compiler)
