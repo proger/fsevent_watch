@@ -28,7 +28,7 @@
  * idea from: http://www.openbsd.org/cgi-bin/cvsweb/src/sbin/ifconfig/ifconfig.c (see printb())
  */
 #define	FSEVENTSBITS \
-"\1MustScanSubDirs\2UserDropped\3KernelDropped\4EventIdsWrapped\5HistoryDone\6RootChanged\7Mount\10Unmount\11ICreated\12IRemoved\13IInodeMetaMod\14IRenamed\15IModified\16IFinderInfoMod\17IChangeOwner\20IXattrMod\21IIsFile\22IIsDir\23IIsSymlink\24OwnEvent"
+"\1mustscansubdirs\2userdropped\3kerneldropped\4eventidswrapped\5historydone\6rootchanged\7mount\10unmount\11created\12removed\13inodemetamod\14renamed\15modified\16finderinfomod\17changeowner\20xattrmod\21isfile\22isdir\23issymlink\24ownevent"
 
 static inline void
 sprintb(char *buf, unsigned short v, char *bits)
