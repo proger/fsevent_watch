@@ -4,6 +4,7 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreServices/CoreServices.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include "compat.h"
 
 #define _str(s) #s

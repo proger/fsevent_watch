@@ -170,6 +170,28 @@ static void callback(__attribute__((unused)) FSEventStreamRef streamRef,
   }
   fflush(stdout);
   free(buf);
+
+  if (fcntl(STDIN_FILENO, F_GETFD) == -1) {
+    CFRunLoopStop(CFRunLoopGetCurrent());
+  }
+}
+
+static void stdin_callback(CFFileDescriptorRef fdref, CFOptionFlags callBackTypes, void *info)
+{
+  fprintf(stderr, "callback!\n");
+  char buf[1024];
+  int nread;
+
+  do {
+    nread = read(STDIN_FILENO, buf, sizeof(buf));
+    if (nread == -1 && errno == EAGAIN) {
+      CFFileDescriptorEnableCallBacks(fdref, kCFFileDescriptorReadCallBack);
+      return;
+    } else if (nread == 0) {
+      exit(1);
+      return;
+    }
+  } while (nread > 0);
 }
 
 int main(int argc, const char* argv[])
@@ -190,6 +212,14 @@ int main(int argc, const char* argv[])
   FSEventStreamShow(stream);
   fprintf(stderr, "\n");
 #endif
+
+  fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
+
+  CFFileDescriptorRef fdref = CFFileDescriptorCreate(kCFAllocatorDefault, STDIN_FILENO, false, stdin_callback, NULL);
+  CFFileDescriptorEnableCallBacks(fdref, kCFFileDescriptorReadCallBack);
+  CFRunLoopSourceRef source = CFFileDescriptorCreateRunLoopSource(kCFAllocatorDefault, fdref, 0);
+  CFRunLoopAddSource(CFRunLoopGetCurrent(), source, kCFRunLoopDefaultMode);
+  CFRelease(source);
 
   FSEventStreamScheduleWithRunLoop(stream,
                                    CFRunLoopGetCurrent(),
