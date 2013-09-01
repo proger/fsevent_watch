@@ -178,7 +178,6 @@ static void callback(__attribute__((unused)) FSEventStreamRef streamRef,
 
 static void stdin_callback(CFFileDescriptorRef fdref, CFOptionFlags callBackTypes, void *info)
 {
-  fprintf(stderr, "callback!\n");
   char buf[1024];
   int nread;
 
