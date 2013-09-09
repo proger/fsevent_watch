@@ -47,3 +47,7 @@ make: `fsevent_watch' is up to date.
 ## Building
 
 * just run `make install` (and make sure you have a compiler)
+
+## Caveats
+
+* fsevents API does not follow symlinks
